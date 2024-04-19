@@ -10,6 +10,8 @@
 
 <script lang="ts">
 console.log('prefetching-1');
+
+export default {};
 </script>
 
 <!-- component setup hook에서 컴파일됨 -->
