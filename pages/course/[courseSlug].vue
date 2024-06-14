@@ -54,7 +54,7 @@
         unelevated
         :outline="completed ? false : true"
         :icon="completed ? 'check' : undefined"
-        @click="completed = !completed"
+        @click="toggleComplete"
       />
       <q-input
         v-model="memo"
@@ -100,7 +100,15 @@
 <script setup lang="ts">
 const route = useRoute();
 const courseSlug = route.params.courseSlug as string;
-const { course, prevCourse, nextCourse } = useCourse(courseSlug);
+const { course, prevCourse, nextCourse } = await useCourse(courseSlug);
+
+// if (!course) {
+//   throw createError({
+//     statusCode: 404,
+//     statusMessage: 'Course not found',
+//     // fatal: true,
+//   });
+// }
 
 console.log('[courseSlug].vue 컴포넌트 setup hooks');
 
@@ -109,12 +117,38 @@ definePageMeta({
   key: (route) => route.fullPath,
   title: 'My home page',
   // hoistingTest,
-  keepalive: true,
+  // keepalive: true,
   alias: ['/lecture/:courseSlug'],
+  // validate: (route) => {
+  middleware: async (route) => {
+    const courseSlug = route.params.courseSlug as string;
+    // 매크로 함수는 전역이므로 위에서 선언된 상태값 사용불가능
+    const { course } = await useCourse(courseSlug);
+    if (!course) {
+      // return false;
+      // throw createError({
+      //   statusCode: 404,
+      //   statusMessage: 'Course not found',
+      // });
+      return abortNavigation(
+        createError({
+          statusCode: 404,
+          statusMessage: 'Course not found',
+        }),
+      );
+    }
+    return true;
+  },
 });
 
 const memo = ref('');
 const completed = ref(false);
+
+const toggleComplete = () => {
+  // $fetch('/api/error');
+  createError('에러가 발생했습니다.');
+  completed.value = !completed.value;
+};
 </script>
 
 <style scoped></style>

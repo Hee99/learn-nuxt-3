@@ -4,21 +4,76 @@
       <q-toolbar>
         <q-toolbar-title>Vue Master Course</q-toolbar-title>
         <NuxtLink v-slot="{ navigate }" custom to="/">
-          <q-btn stretch flat label="Home" no-caps @click="navigate" />
+          <q-btn stretch flat :label="$t('home')" no-caps @click="navigate" />
         </NuxtLink>
         <q-separator dark vertical />
         <NuxtLink v-slot="{ navigate }" custom to="/about">
-          <q-btn stretch flat label="About" no-caps @click="navigate" />
+          <q-btn stretch flat :label="$t('about')" no-caps @click="navigate" />
         </NuxtLink>
         <q-separator dark vertical />
-        <q-btn stretch flat label="Youtube" no-caps @click="moveYoutube()" />
+        <q-btn
+          stretch
+          flat
+          :label="$t('youtube')"
+          no-caps
+          @click="moveYoutube()"
+        />
         <q-separator dark vertical />
         <NuxtLink v-slot="{ navigate }" custom to="/admin">
-          <q-btn stretch flat label="Admin" no-caps @click="navigate()" />
+          <q-btn
+            stretch
+            flat
+            :label="$t('admin')"
+            no-caps
+            @click="navigate()"
+          />
         </NuxtLink>
+        <q-separator dark vertical />
+        <NuxtLink
+          v-if="!isAuthenticated"
+          v-slot="{ navigate }"
+          custom
+          to="/login"
+        >
+          <q-btn
+            stretch
+            flat
+            :label="$t('login')"
+            no-caps
+            @click="navigate()"
+          />
+        </NuxtLink>
+        <q-btn
+          v-else
+          stretch
+          flat
+          :label="$t('logout')"
+          no-caps
+          @click="signOut"
+        />
+        <q-separator dark vertical />
+        <q-btn-dropdown stretch flat no-caps :label="selectedLanguageName">
+          <q-list padding dense>
+            <q-item
+              v-for="{ code, name } in languages"
+              :key="code"
+              v-close-popup
+              clickable
+              :active="$i18n.locale === code"
+              @click="$i18n.locale = code"
+            >
+              <q-item-section>
+                <q-item-label>{{ name }}</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
       </q-toolbar>
     </q-header>
     <q-page-container :style="pageContainerStyle">
+      <q-banner v-if="isAuthenticated" class="bg-primary text-white">
+        {{ authUser }}
+      </q-banner>
       <slot></slot>
     </q-page-container>
   </q-layout>
@@ -30,12 +85,37 @@ const pageContainerStyle = computed(() => ({
   margin: '0 auto',
 }));
 
+// const { signOut } = useAuth();
+// const authUser = useAuthUser();
+// const isAuthenticated = useAuthenticated();
+const authStore = useAuthStore();
+const { user: authUser, isAuthenticated } = storeToRefs(authStore);
+const { signOut } = authStore;
+
 const moveYoutube = async () => {
   await navigateTo('https://youtube.com/@gymcoding', {
     external: true,
     open: { target: '_blank' },
   });
 };
+
+interface Language {
+  name: string;
+  code: 'en' | 'ko';
+}
+
+const languages = ref<Language[]>([
+  { name: 'English', code: 'en' },
+  { name: '한국어', code: 'ko' },
+]);
+
+const { locale } = useI18n();
+
+const selectedLanguageName = computed(
+  () => languages.value.find((lang) => lang.code === locale.value)?.name,
+);
+
+watch(locale, (val) => (useCookie('locale').value = val));
 </script>
 
 <style scoped></style>
